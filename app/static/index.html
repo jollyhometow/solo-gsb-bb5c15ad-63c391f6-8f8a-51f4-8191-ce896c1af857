@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>会议议程实时重排</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-title">
+      <h1>会议议程实时重排</h1>
+      <span id="meetingMeta" class="meeting-meta"></span>
+    </div>
+    <div class="topbar-actions">
+      <button id="btnUndo" class="btn btn-warn" disabled>↩ 撤销最近一次录入</button>
+      <button id="btnReset" class="btn">新建会议</button>
+    </div>
+  </header>
+
+  <div id="conflictBanner" class="conflict-banner hidden"></div>
+  <div id="noticeBanner" class="notice-banner hidden"></div>
+
+  <main class="layout">
+    <!-- 左：录入区 -->
+    <section class="panel panel-left">
+      <h2>议程项</h2>
+      <form id="itemForm" class="item-form">
+        <label>类型
+          <select id="fKind">
+            <option value="agenda">议程项</option>
+            <option value="break">休息段（固定开始）</option>
+          </select>
+        </label>
+        <label>标题 <input id="fTitle" required maxlength="100" placeholder="如：需求评审"></label>
+        <div class="form-row">
+          <label>计划(分) <input id="fPlanned" type="number" min="1" value="20" required></label>
+          <label class="agenda-only">最短(分) <input id="fMin" type="number" min="0" value="5"></label>
+        </div>
+        <div class="form-row agenda-only">
+          <label>优先级
+            <select id="fPriority">
+              <option value="1">1（最重要，最先保住）</option>
+              <option value="2">2</option>
+              <option value="3" selected>3（默认）</option>
+              <option value="4">4</option>
+              <option value="5">5（最不重要，先被压缩）</option>
+            </select>
+          </label>
+        </div>
+        <label class="agenda-only checkbox">
+          <input id="fIncompressible" type="checkbox"> 不可压缩
+        </label>
+        <label class="break-only hidden">固定开始时间
+          <input id="fFixedStart" type="datetime-local">
+        </label>
+        <button type="submit" class="btn btn-primary">添加</button>
+      </form>
+
+      <ol id="itemList" class="item-list"></ol>
+      <p id="listHint" class="hint hidden">暂无议程项，请先在上方添加。</p>
+    </section>
+
+    <!-- 右：双时间轴 -->
+    <section class="panel panel-right">
+      <div class="timeline-toolbar">
+        <h2>时间轴对比</h2>
+        <div class="zoom-controls">
+          <button id="zoomOut" class="btn btn-sm">－</button>
+          <span id="zoomLabel"></span>
+          <button id="zoomIn" class="btn btn-sm">＋</button>
+        </div>
+      </div>
+
+      <div class="legend">
+        <span><i class="sw sw-unchanged"></i>原计划/未变</span>
+        <span><i class="sw sw-past"></i>已结束</span>
+        <span><i class="sw sw-anchor"></i>刚录入</span>
+        <span><i class="sw sw-compressed"></i>已压缩</span>
+        <span><i class="sw sw-conflict"></i>冲突项</span>
+        <span><i class="sw sw-break"></i>固定休息</span>
+      </div>
+
+      <div id="timelineScroll" class="timeline-scroll">
+        <div id="timelineInner">
+          <div id="axisRow" class="axis-row"></div>
+          <div class="tl-row-wrap">
+            <div class="tl-row-label">原计划</div>
+            <div id="originalRow" class="tl-row"></div>
+          </div>
+          <div class="tl-row-wrap">
+            <div class="tl-row-label">新计划</div>
+            <div id="currentRow" class="tl-row current"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="conflictDetail" class="conflict-detail hidden"></div>
+    </section>
+  </main>
+
+  <!-- 新建会议对话框 -->
+  <dialog id="resetDialog">
+    <form method="dialog" class="reset-form">
+      <h3>新建 / 重置会议</h3>
+      <label>会议标题 <input id="rTitle" value="团队例会"></label>
+      <label>开始时间 <input id="rStart" type="datetime-local"></label>
+      <p class="hint">重置将清空全部议程项与实况录入。</p>
+      <div class="dialog-actions">
+        <button value="cancel" class="btn">取消</button>
+        <button id="confirmReset" value="confirm" class="btn btn-primary">确认重置</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
